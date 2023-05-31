@@ -1,4 +1,4 @@
- //I love Manuela
+//I love Manuela
 #include <bits/stdc++.h>
 #define ff first
 #define ss second
@@ -15,10 +15,9 @@ struct state {
     //Indica si este nodo corresponde a sufijos del string original
     bool terminal = false;
     map<char, int> next;
-    bool visited = false;
 };
 
-const int MAXLEN = 1e5 + 2;
+const int MAXLEN = 1e6;
 state st[MAXLEN * 2];
 int sz, last;
 
@@ -59,60 +58,58 @@ void sa_extend(char c) {
     last = cur;
 }
 
-vector<string> vals;
-vector<vector<int>> best;
+int contar(int v){
+    if(st[v].cnt){
+        return st[v].cnt;
+    }
+    if(v) {
+        st[v].tam = st[v].len - st[st[v].link].len;
+    }
+    int rta = st[v].terminal;
+    for (auto const& x : st[v].next){
+        rta+=contar(x.second);
+    }
+    return st[v].cnt = rta;
+}
 
-void dfs(int now){
-    if(st[now].visited) return;
-    if(st[now].link == -1) return;
-    dfs(st[now].link);
-    for(int j = 1; j < vals.size();++j)
-        best[j][now] = max(best[j][now],best[j][st[now].link]);
-    st[now].visited = 1;
+void asignar_terminales() {
+    int est = last;
+    while(est>0){
+        st[est].terminal = true;
+        est = st[est].link;
+    }
 }
 
 int main(){
     ios_base::sync_with_stdio(0), cin.tie(0);
-    //freopen("input.txt", "r", stdin);
-    //freopen("output.txt", "w", stdout);
+    //freopen("input.txt","r",stdin);
+    //freopen("output.txt","w",stdout);
 
-    string temp;
-    while(getline(cin,temp)){
-        vals.pb(temp);
-    }
+    int n,q; cin >> n >> q;
+
+    string imp; cin >> imp;
 
     sa_init();
-    for(auto &let:vals[0]){
+
+    for(auto let: imp)
         sa_extend(let);
-    }
 
-    best.resize(vals.size(),vector<int>(MAXLEN * 2,0));
+    asignar_terminales();
+    contar(0);
 
-    for(int i = 1; i < vals.size(); ++i){
-        int cur = 0, len = 0;
-        for(auto &let:vals[i]){
-            while(cur > 0 && !st[cur].next.count(let)){
-                cur = st[cur].link;
-                len = st[cur].len;
+    while(q--){
+        string check; cin >> check;
+        int now = 0;
+
+        for(auto let:check){
+            if(!st[now].next.count(let)){
+                now = 0; break;
             }
-            if(st[cur].next.count(let)) ++len, cur = st[cur].next[let];
-            best[i][cur] = max(len,best[i][cur]);
+            now = st[now].next[let];
         }
 
+        cout << (now != 0? st[now].cnt: 0) << "\n";
     }
 
-    int ans = 0;
-    for(int i = 1; i <= last && vals.size() > 1;++i){
-        if(st[i].link != -1)
-            dfs(i);
-        int temp = INT_MAX;
-        for(int j = 1; j < vals.size();++j){
-            temp = min(best[j][i],temp);
-        }
-        ans = max(ans,temp);
-    }   
-
-
-    cout << ans << "\n";
     return 0;
 }

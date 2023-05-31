@@ -6,6 +6,7 @@
 #define ll long long
 using namespace std;
 
+
 struct state {
     int len, link;
     //Cuenta cuantas veces aparecen los strings que correponden a este nodo en el string
@@ -15,10 +16,9 @@ struct state {
     //Indica si este nodo corresponde a sufijos del string original
     bool terminal = false;
     map<char, int> next;
-    bool visited = false;
 };
 
-const int MAXLEN = 1e5 + 2;
+const int MAXLEN = 1e6;
 state st[MAXLEN * 2];
 int sz, last;
 
@@ -59,60 +59,36 @@ void sa_extend(char c) {
     last = cur;
 }
 
-vector<string> vals;
-vector<vector<int>> best;
-
-void dfs(int now){
-    if(st[now].visited) return;
-    if(st[now].link == -1) return;
-    dfs(st[now].link);
-    for(int j = 1; j < vals.size();++j)
-        best[j][now] = max(best[j][now],best[j][st[now].link]);
-    st[now].visited = 1;
-}
-
 int main(){
     ios_base::sync_with_stdio(0), cin.tie(0);
     //freopen("input.txt", "r", stdin);
     //freopen("output.txt", "w", stdout);
-
-    string temp;
-    while(getline(cin,temp)){
-        vals.pb(temp);
-    }
-
     sa_init();
-    for(auto &let:vals[0]){
+
+    string imp; cin >> imp;
+    for(auto let:imp)
         sa_extend(let);
-    }
 
-    best.resize(vals.size(),vector<int>(MAXLEN * 2,0));
+    int nm; cin >> nm;
 
-    for(int i = 1; i < vals.size(); ++i){
-        int cur = 0, len = 0;
-        for(auto &let:vals[i]){
-            while(cur > 0 && !st[cur].next.count(let)){
-                cur = st[cur].link;
-                len = st[cur].len;
+    while(nm--){
+        string check; cin >> check;
+        int ans = 1;
+        int now = 0;
+        for(auto let: check){
+            if(!st[now].next.count(let)){
+                now = 0;
+                ++ans;
             }
-            if(st[cur].next.count(let)) ++len, cur = st[cur].next[let];
-            best[i][cur] = max(len,best[i][cur]);
+            if(!st[now].next.count(let)){
+                ans = -1;
+                break;
+            }
+            now = st[now].next[let];
         }
 
+        cout << ans << "\n";
     }
 
-    int ans = 0;
-    for(int i = 1; i <= last && vals.size() > 1;++i){
-        if(st[i].link != -1)
-            dfs(i);
-        int temp = INT_MAX;
-        for(int j = 1; j < vals.size();++j){
-            temp = min(best[j][i],temp);
-        }
-        ans = max(ans,temp);
-    }   
-
-
-    cout << ans << "\n";
     return 0;
 }
